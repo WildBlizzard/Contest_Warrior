@@ -7,7 +7,8 @@ import json
 sys.dont_write_bytecode = True
 from Datong.peon_zhi import Peons
 
-holder = 'holder.json'
+
+holder = 'holder_zhi.json'
 with open(holder, 'r', encoding='utf8') as cs:
     configs = json.load(cs)
 

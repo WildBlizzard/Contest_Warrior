@@ -1,5 +1,6 @@
 # --- 虽有多闻 若不修行 与不闻等 如人说食 终不能饱
 
+from json.decoder import JSONDecodeError
 import os
 import sys
 import copy
@@ -86,30 +87,36 @@ class Collector:
         else: return origin_ocr_result
 
     def select_ocr_res(self): # OCR about Final
-        ocr_res = self.get_ocr_res()
-        ocr_res_list = ocr_res['data']['result'][0]['data']
-        ename_ocr = [enames['element_name'] for enames in ocr_res_list]
-        # eval_ocr = [evals['element_value'] for evals in ocr_res_list]
-        eval_ocr = []
-        for evals in ocr_res_list:
-            ocr_yes = evals['element_value']
-            if ocr_yes: eval_ocr.append(ocr_yes)
-            else: eval_ocr.append('None')
-        # self.all_ocr_cates = ename_ocr
-        return dict(zip(ename_ocr, eval_ocr))
+        try:
+            ocr_res = self.get_ocr_res()
+        except JSONDecodeError: print('Expecting value wrong, maybe a mistake')
+        else:
+            ocr_res_list = ocr_res['data']['result'][0]['data']
+            ename_ocr = [enames['element_name'] for enames in ocr_res_list]
+            # eval_ocr = [evals['element_value'] for evals in ocr_res_list]
+            eval_ocr = []
+            for evals in ocr_res_list:
+                ocr_yes = evals['element_value']
+                if ocr_yes: eval_ocr.append(ocr_yes)
+                else: eval_ocr.append('None')
+            # self.all_ocr_cates = ename_ocr
+            return dict(zip(ename_ocr, eval_ocr))
 
-    def operator_manual(self, lab_got, ocr_got, key_lab): # manual function
+    def operator_manual(self, lab_got, ocr_got, key_lab): # Able to Diy
+        """
+        lab_got: Label value (human did)
+        ocr_got: OCR detected value (AI)
+        key_lab: which header item input (key of manual)
+        """
         # Left label result, Right ocr result
         lab_v, ocr_v = lab_got[key_lab], ocr_got[key_lab]
-        # -----------------------------------------------------
-        lab_m, ocr_m = lab_v, ocr_v # DIY here
+        lab_m, ocr_m = lab_v, ocr_v
         if lab_m == 'None' and ocr_m == 'None':
             mix_val = 'None'
         elif lab_m == ocr_m:
             mix_val = f'{lab_m}|>..<|{ocr_m}|>..<|True'
         else:
             mix_val = f'{lab_m}|>..<|{ocr_m}|>..<|False'
-        # -----------------------------------------------------
         return mix_val
 
     def deal_final_info(self, lgot, ogot, keys_ocr):

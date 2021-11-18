@@ -6,6 +6,7 @@ import sys
 import time
 sys.dont_write_bytecode = True
 from .compare_zhi import Maker
+from .diy_demo_znj_zhi import Diy # diy manually
 from .compare_zhi import Collector
 from Datong.tools.showTime import electronic_clock
 from .tools.getFullPath import through_full_path as tp
@@ -25,10 +26,13 @@ class Peons:
         m = Maker(the_basket_up, self.excel_name)
         m.make_excel()
 
-    def work_man_one(self, basket, lab_cont, ida_cont, img_name):
-        c = Collector(lab_cont, ida_cont, self.sub_sce,
+    def work_man_one(self, basket, lab_cont, ida_cont, img_name): # diy here
+        # c = Collector(lab_cont, ida_cont, self.sub_sce,
+        #             self.main_sce, self.service_eng, img_name)
+        # res = c.processing_room()
+        d = Diy(lab_cont, ida_cont, self.sub_sce,
                     self.main_sce, self.service_eng, img_name)
-        res = c.processing_room()
+        res = d.processing_room() # diy manually
         apple_c, key_c = res[0], res[1]
         basket['apples'].append(apple_c)
         basket['keys'] = key_c
