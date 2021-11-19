@@ -23,6 +23,10 @@ class Peons:
         self.excel_name = excel_name
 
     def work_man_two(self, the_basket_up):
+        if not the_basket_up['keys']:
+            print('Please check the data folder,\
+                    \nit seems like empty.')
+            return None
         m = Maker(the_basket_up, self.excel_name)
         m.make_excel()
 
@@ -61,7 +65,8 @@ class Peons:
         start = time.perf_counter()
         some_thing = self.work_leader()
         if some_thing == 'Nothing':
-            print('Input error, stoped the program, please check the data folder')
+            print('Input error, stoped the program,\
+                    please check the data folder.')
         stop = time.perf_counter() - start
         final_show = electronic_clock(stop)
         hour, minute, second = final_show[0], final_show[1], final_show[2]
