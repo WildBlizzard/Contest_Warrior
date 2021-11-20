@@ -1,6 +1,5 @@
 # --- 虽有多闻 若不修行 与不闻等 如人说食 终不能饱
 
-from json.decoder import JSONDecodeError
 import os
 import sys
 import copy
@@ -9,8 +8,9 @@ import pandas as pd
 from typing import Counter
 sys.dont_write_bytecode = True
 from collections import OrderedDict
-from .tools.ocrService import OCR
-from .tools.completeOther import make_dirs
+from .tools.ocr_Engine_zhi import OCR
+from json.decoder import JSONDecodeError
+from .tools.right_Hand_zhi import RightHand
 
 
 class Collector:
@@ -26,10 +26,12 @@ class Collector:
     def get_label_res(self): # Label about
         return json.loads(self.res_l) # f.read()
 
-    def mix_useful(self, sts, swh, deal_lista): # Label about
-        out_use_list = deal_lista[swh:swh+sts]
-        out_use_val = ''.join(out_use_list)
-        return out_use_val, out_use_list # 2021617, ['2021', '6', '17']
+    def mix_useful(self, sts, swh, deal_vals): # Label about
+        ready_to_deal = [deal_vals[swh_sgl] for swh_sgl in swh]
+        if len(ready_to_deal) != sts:
+            print(f'Duplicate label seems strange...\n{ready_to_deal}')
+        out_use_val = ''.join(ready_to_deal)
+        return out_use_val, ready_to_deal # 2021617, ['2021', '6', '17']
 
     def del_categroy(self, scate, deal_listb) -> None: # Label about
         for deal_idx in range(len(deal_listb) -1, -1, -1):
@@ -41,32 +43,32 @@ class Collector:
             if deal_idx in del_list:
                 del deal_listc[deal_idx]
 
-    def split_monks_again(self, specll, valdd, catss, valss): # Label about
+    def split_monks_again(self, specll, catss, valss): # Label about
+        valss_c = copy.deepcopy(valss)
+        reborn_val = []
+        should_del_idx = sum([specll_sgl[-1] for specll_sgl in specll], [])
+        for item in range(len(valss)):
+            if item not in should_del_idx: reborn_val.append(valss[item])
         for sp_sgl1 in specll:
             sp_cate1, sp_times1, sp_where1 = sp_sgl1[0], sp_sgl1[1], sp_sgl1[2]
             # refresh original position of category
             catss.append(sp_cate1)
             # refresh original position of value
-            key_vals = self.mix_useful(sp_times1, sp_where1, valdd)[0]
-            valss.append(key_vals)
-        return catss, valss
+            key_vals = self.mix_useful(sp_times1, sp_where1, valss_c)[0]
+            reborn_val.append(key_vals)
+        return catss, reborn_val
 
     def deal_special_guy(self, cats, vals, specl): # Label about
-        vald = copy.deepcopy(vals)
-        should_del = []
         for sp_sgl in specl: # del categroies
-            sp_cate, sp_times, sp_where = sp_sgl[0], sp_sgl[1], sp_sgl[2]
-            self.del_categroy(sp_cate, cats)
-            should_del.append(list(range(sp_where, sp_where+sp_times)))
-        should_del = sum(should_del, [])
-        self.del_value(should_del, vals) # del values
-        return self.split_monks_again(specl, vald, cats, vals)
+            sp_cate = sp_sgl[0]
+            self.del_categroy(sp_cate, cats) # delete useless cates
+        return self.split_monks_again(specl, cats, vals)
 
     def split_monks(self, category_list, value_list): # Label about
         frequencies, special_list = Counter(category_list), []
         for ky, ts in frequencies.items():
             if ts > 1:
-                sp_wh = category_list.index(ky)
+                sp_wh = [sw for sw in range(len(category_list)) if category_list[sw] == ky]
                 special_list.append((ky, ts, sp_wh))
         if special_list:
             sp_guy = self.deal_special_guy(category_list, value_list, special_list)
@@ -83,23 +85,21 @@ class Collector:
         engine_ocr = OCR(self.server_o, self.img_o, self.main_o, self.sub_o)
         try:
             origin_ocr_result = engine_ocr.post_request()
-        except TimeoutError: print('Connection aborted, no response')
+        except TimeoutError: print('Connection aborted, no response.')
         else: return origin_ocr_result
 
     def select_ocr_res(self): # OCR about Final
         try:
             ocr_res = self.get_ocr_res()
-        except JSONDecodeError: print('Expecting value wrong, maybe a mistake')
+        except JSONDecodeError: print('Expecting value wrong, maybe a mistake.')
         else:
             ocr_res_list = ocr_res['data']['result'][0]['data']
             ename_ocr = [enames['element_name'] for enames in ocr_res_list]
-            # eval_ocr = [evals['element_value'] for evals in ocr_res_list]
             eval_ocr = []
             for evals in ocr_res_list:
                 ocr_yes = evals['element_value']
                 if ocr_yes: eval_ocr.append(ocr_yes)
                 else: eval_ocr.append('None')
-            # self.all_ocr_cates = ename_ocr
             return dict(zip(ename_ocr, eval_ocr))
 
     def operator_manual(self, lab_got, ocr_got, key_lab): # Able to Diy
@@ -126,7 +126,7 @@ class Collector:
             try:
                 mix_val = self.operator_manual(lgot, ogot, klab)
             except KeyError as ke:
-                print(f'Label {ke} does not match the remote information.')
+                print(f'Label {ke} does not match the remote information, The image is {self.file_name}.')
                 return
             the_apple[klab] = mix_val
         return the_apple, keys_ocr
@@ -212,7 +212,7 @@ class Maker:
         # df = pd.DataFrame.from_dict(self.frames, orient='index').T
         excel_name = self.diy_name + '.xlsx'
         excel_path = os.path.join('Excels', excel_name)
-        make_dirs(os.path.split(excel_path)[0])
+        RightHand.make_dirs(os.path.split(excel_path)[0])
         try: df.to_excel(excel_path)
         except PermissionError:
             print('Plz shutdown the excel and try again...')

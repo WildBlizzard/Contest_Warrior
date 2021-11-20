@@ -1,6 +1,6 @@
 # Contest_Warrior
 
-
+Version：1.1
 
 Python：3.8.5
 
@@ -18,9 +18,7 @@ AutoOCR 的 infer 结果（end2end_score）实在太差了，可视性极差，�
 
 ### 请注意：
 
-1. ##### 图片与标注结果必须一一对应（别多也别少）。
-
-2. ##### 多框选单字段顺序必须相连（如 [..."日期":  2021, "日期":  11, "日期":  18...]）。
+##### 图片与标注结果必须一一对应（别多也别少）。
 
 
 
@@ -64,13 +62,17 @@ python slaveholder_zhi.py
 
 ```python
 def work_man_one(self, basket, lab_cont, ida_cont, img_name): # diy here
+        # ------------ diy area ------------------
         # c = Collector(lab_cont, ida_cont, self.sub_sce,
         #             self.main_sce, self.service_eng, img_name)
         # res = c.processing_room()
-        d = Diy(lab_cont, ida_cont, self.sub_sce, # 这里将之前的 Collector 替换成了 Diy
+        d = Diy(lab_cont, ida_cont, self.sub_sce,
                     self.main_sce, self.service_eng, img_name)
-        res = d.processing_room() # diy manually
-        apple_c, key_c = res[0], res[1]
+        res = d.processing_room()
+        # ------------ diy area ------------------
+        try: apple_c, key_c = res[0], res[1]
+        except TypeError:
+            apple_c, key_c = {'None': 'None'}, 'None'
         basket['apples'].append(apple_c)
         basket['keys'] = key_c
 ```
@@ -84,12 +86,3 @@ def work_man_one(self, basket, lab_cont, ida_cont, img_name): # diy here
 每个字段对比，单项正确为 **True** 加一分，否则 **False** 不加分，本身没有提取结果也不加分，最后根据本列（也就是一个字段）的分数除以总项数获得最终分，**全错**或**完全没有结果**的字段为0，全部正确为1，有错有对则是常见小数，最后将其加在一起除以**有结果的项数**获得最终成绩。
 
 根据这样的计算方式，需在拿到表格后第一时间调查**全错**或**完全没有结果**的字段是否正确，如不正确应当及时调整策略或**重写收集类方法**。
-
-
-
-​																																			2021.11.18
-
-​																																						zhiq
-
-​																																						北京
-

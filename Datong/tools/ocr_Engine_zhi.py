@@ -2,8 +2,10 @@
 
 
 import os
+import sys
 import base64
 from requests import post
+sys.dont_write_bytecode = True
 
 
 class OCR:

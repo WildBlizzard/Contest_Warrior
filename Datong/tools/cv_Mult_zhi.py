@@ -1,11 +1,13 @@
 # --- 虽有多闻 若不修行 与不闻等 如人说食 终不能饱
 
 
+import sys
 import cv2
 import numpy as np
 from PIL import Image
 from io import BytesIO
 import pyzbar.pyzbar as pyz
+sys.dont_write_bytecode = True
 
 
 class CvMultMethod:

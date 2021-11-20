@@ -3,7 +3,7 @@
 
 import sys
 sys.dont_write_bytecode = True
-from .tools.regexOut import out
+from .tools.right_Hand_zhi import RightHand
 from .compare_zhi import Collector
 
 
@@ -17,8 +17,13 @@ class Diy(Collector):
         lab_v, ocr_v = lab_got[key_lab], ocr_got[key_lab]
         lab_m, ocr_m = lab_v, ocr_v
         # ------------ diy area ------------------
-        if key_lab == '填发日期':
-            ocr_m = out('[^\u4e00-\u9fa5]+', ocr_v)
+        period_though = RightHand.out('[\u4e00-\u9fa5]+', key_lab) == '税款所属时期'
+        if key_lab == '填发日期' or period_though:
+            lab_m = RightHand.out('[^\u4e00-\u9fa5\s]+', lab_v)
+            ocr_m = RightHand.out('[^\u4e00-\u9fa5\s]+', ocr_v)
+        if key_lab == '完税编号':
+            lab_m = lab_v.replace('.', '')
+            ocr_m = ocr_v.replace('.', '')
         # ------------ diy area ------------------
         if lab_m == 'None' and ocr_m == 'None':
             mix_val = 'None'
