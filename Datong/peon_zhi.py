@@ -23,7 +23,10 @@ class Peons:
         self.excel_name = excel_name
 
     def work_man_two(self, the_basket_up):
-        if not the_basket_up['keys']:
+        if the_basket_up['keys'] == 'None':
+            print('Please check the error label.')
+            return None
+        elif not the_basket_up['keys']:
             print('Please check the data folder,\
                     \nit seems like empty.')
             return None
@@ -37,7 +40,10 @@ class Peons:
         d = Diy(lab_cont, ida_cont, self.sub_sce,
                     self.main_sce, self.service_eng, img_name)
         res = d.processing_room() # diy manually
-        apple_c, key_c = res[0], res[1]
+        try:
+            apple_c, key_c = res[0], res[1]
+        except TypeError:
+            apple_c, key_c = {'None': 'None'}, 'None'
         basket['apples'].append(apple_c)
         basket['keys'] = key_c
 

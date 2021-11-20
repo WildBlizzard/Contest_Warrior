@@ -123,7 +123,11 @@ class Collector:
         the_apple = OrderedDict()
         the_apple['文件名/准确率'] = self.file_name
         for klab in lgot.keys():
-            mix_val = self.operator_manual(lgot, ogot, klab)
+            try:
+                mix_val = self.operator_manual(lgot, ogot, klab)
+            except KeyError as ke:
+                print(f'Label {ke} does not match the remote information.')
+                return
             the_apple[klab] = mix_val
         return the_apple, keys_ocr
 
