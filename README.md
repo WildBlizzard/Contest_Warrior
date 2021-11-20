@@ -29,10 +29,10 @@ AutoOCR 的 infer 结果（end2end_score）实在太差了，可视性极差，�
 ```json
 {
   "Data": "data", # 指定输入路径，其下必有固定名字两个文件夹 Images, Labels
-  "Excel_Name": "my_score", # 最后输出的Excel名，默认输出到当前路径下 Excels
   "Scene": "xxxx", # 场景 Scene
   "Scene_Main": "xxxx", # Scene 上级，如 ticket
-  "Host&Port": "http://127.0.0.1:2021/" # 请求URL，注意最后一定要有 "/"
+  "Host&Port": "http://127.0.0.1:2021/", # 请求URL，注意最后一定要有 "/"
+  "Excel_Name": "my_score" # 最后输出的Excel名，默认输出到当前路径下 Excels
 }
 ```
 

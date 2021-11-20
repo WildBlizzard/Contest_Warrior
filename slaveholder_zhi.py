@@ -14,10 +14,10 @@ with open(holder, 'r', encoding='utf8') as cs:
 
 labels = os.path.join(configs['Data'], 'Labels')
 images = os.path.join(configs['Data'], 'Images')
-file_name = configs['Excel_Name']
 sub_sce = configs['Scene']
 main_sce = configs['Scene_Main']
 service_eng = configs['Host&Port']
+file_name = configs['Excel_Name']
 
 p = Peons(labels, images, sub_sce, main_sce, service_eng, file_name)
 p.work_work()
