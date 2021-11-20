@@ -196,7 +196,7 @@ class Maker:
             final_score = each_score / all_len
         except ZeroDivisionError:
             final_score = 0
-            print('Final score error!')
+            print('I am sorry, there are no correct answers.')
         data_frame.iloc[-1, 0] = '准确率: {:.3f}'.format(final_score)
         return data_frame
 
