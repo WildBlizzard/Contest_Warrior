@@ -24,7 +24,7 @@ AutoOCR 的 infer 结果（end2end_score）实在太差了，可视性极差，�
 
 ### 使用方法：
 
-直接使用一键版：**ContentWarrior_OneStep_v1.1_zhi.py**，修改其头部如下信息，然后python它。
+直接使用一键版：**ContestWarrior_OneStep_v1.1_zhi.py**，修改其头部如下信息，然后python它。
 
 ```python
 # -------------------------------------------------
