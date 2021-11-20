@@ -114,9 +114,9 @@ class Collector:
         if lab_m == 'None' and ocr_m == 'None':
             mix_val = 'None'
         elif lab_m == ocr_m:
-            mix_val = f'{lab_m}|>..<|{ocr_m}|>..<|True'
+            mix_val = f'True|>..<|{lab_m}|>..<|{ocr_m}'
         else:
-            mix_val = f'{lab_m}|>..<|{ocr_m}|>..<|False'
+            mix_val = f'False|>..<|{lab_m}|>..<|{ocr_m}'
         return mix_val
 
     def deal_final_info(self, lgot, ogot, keys_ocr):
@@ -153,7 +153,7 @@ class Maker:
         if not an_apple: return 0
         core_score, apple_score = 0, len(an_apple)
         for apple_core in an_apple:
-            coco = apple_core.split('|>..<|')[-1]
+            coco = apple_core.split('|>..<|')[0]
             if coco == 'True': core_score += 1
         return core_score / apple_score
 
@@ -192,7 +192,11 @@ class Maker:
             continue
         each_score, all_len = 0, len(score_list)
         for score_sgl in score_list: each_score += score_sgl
-        final_score = each_score / all_len
+        try:
+            final_score = each_score / all_len
+        except ZeroDivisionError:
+            final_score = 0
+            print('Final score error!')
         data_frame.iloc[-1, 0] = '准确率: {:.3f}'.format(final_score)
         return data_frame
 

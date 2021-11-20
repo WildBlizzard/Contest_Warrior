@@ -23,7 +23,7 @@ class Diy(Collector):
         if lab_m == 'None' and ocr_m == 'None':
             mix_val = 'None'
         elif lab_m == ocr_m:
-            mix_val = f'{lab_m}|>..<|{ocr_m}|>..<|True'
+            mix_val = f'True|>..<|{lab_m}|>..<|{ocr_m}'
         else:
-            mix_val = f'{lab_m}|>..<|{ocr_m}|>..<|False'
+            mix_val = f'False|>..<|{lab_m}|>..<|{ocr_m}'
         return mix_val
