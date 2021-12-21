@@ -1,6 +1,6 @@
 # Contest_Warrior
 
-
+Version：1.0
 
 Python：3.8.5
 
