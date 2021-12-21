@@ -5,6 +5,7 @@ import os
 import sys
 import time
 import asyncio
+import aiohttp
 sys.dont_write_bytecode = True
 from .compare_zhi import Maker
 from .diy_demo_znj_zhi import Diy # diy manually
@@ -72,9 +73,12 @@ class Peons:
     def work_work(self):
         print('----------------- Start the process -----------------\n')
         start = time.perf_counter()
-        some_thing = self.work_leader()
-        if some_thing == 'Nothing':
-            print('Input error, stoped the program, please check the data folder.')
+        try:
+            some_thing = self.work_leader()
+        except aiohttp.ClientConnectionError: print('Aiohttp Connection aborted...')
+        else:
+            if some_thing == 'Nothing':
+                print('Input error, stoped the program, please check the data folder.')
         stop = time.perf_counter() - start
         final_show = RightHand.electronic_clock(stop)
         hour, minute, second = final_show[0], final_show[1], final_show[2]
