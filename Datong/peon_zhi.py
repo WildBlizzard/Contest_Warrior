@@ -4,6 +4,7 @@
 import os
 import sys
 import time
+import asyncio
 sys.dont_write_bytecode = True
 from .compare_zhi import Maker
 from .diy_demo_znj_zhi import Diy # diy manually
@@ -31,14 +32,14 @@ class Peons:
         m = Maker(the_basket_up, self.excel_name)
         m.make_excel()
 
-    def work_man_one(self, basket, lab_cont, ida_cont, img_name): # diy here
+    async def work_man_one(self, basket, lab_cont, ida_cont, img_name): # diy here
         # ------------ diy area ------------------
         # c = Collector(lab_cont, ida_cont, self.sub_sce,
         #             self.main_sce, self.service_eng, img_name)
         # res = c.processing_room()
         d = Diy(lab_cont, ida_cont, self.sub_sce,
                     self.main_sce, self.service_eng, img_name)
-        res = d.processing_room()
+        res = await d.processing_room()
         # ------------ diy area ------------------
         try: apple_c, key_c = res[0], res[1]
         except TypeError:
@@ -52,6 +53,8 @@ class Peons:
         if img_ok and lab_ok: return 1
 
     def work_leader(self):
+        lp = asyncio.get_event_loop()
+        tasks = []
         the_basket = {'apples': [], 'keys': None}
         for img_path in RightHand.through_full_path(self.images):
             img_name = os.path.split(img_path)[-1]
@@ -61,8 +64,9 @@ class Peons:
                 with open(label_path, 'r', encoding='utf8') as lda:
                     lab_cont = lda.read()
                 with open(img_path, 'rb') as ida: ida_cont = ida.read()
-                self.work_man_one(the_basket, lab_cont, ida_cont, img_name)
+                tasks.append(self.work_man_one(the_basket, lab_cont, ida_cont, img_name))
             else: return 'Nothing'
+        lp.run_until_complete(asyncio.gather(*tasks))
         self.work_man_two(the_basket)
 
     def work_work(self):
@@ -76,5 +80,4 @@ class Peons:
         hour, minute, second = final_show[0], final_show[1], final_show[2]
         print('\nTotal time:「 %02d : %02d : %02d 」' % (hour, minute, second))
         print('---------------- Process is completed ---------------')
-
 

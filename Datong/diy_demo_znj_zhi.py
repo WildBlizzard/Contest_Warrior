@@ -23,7 +23,23 @@ class Diy(Collector):
             ocr_m = RightHand.out('[^\u4e00-\u9fa5\s]+', ocr_v)
         if key_lab == '完税编号':
             lab_m = lab_v.replace('.', '')
+            lab_m = lab_v.replace('.', '')
+            ocr_m = ocr_v.replace('税收完税证明', '')
+        if key_lab == '填票人':
+            lab_m = lab_v.replace('.', '')
             ocr_m = ocr_v.replace('.', '')
+        if key_lab == '总金额':
+            lab_m = lab_v.replace(lab_v[0], '￥')
+            ocr_m = ocr_v.replace(ocr_v[0], '￥')
+        if key_lab in ['税种', '税款所属时期', '实缴(退)金额']:
+            ocr_m = ocr_v.replace('<..>', '')
+            if key_lab == '税款所属时期':
+                lab_m = RightHand.out('[^\u4e00-\u9fa5\s]+', lab_v)
+                ocr_m = RightHand.out('[^\u4e00-\u9fa5\s]+', ocr_v)
+                ocr_m = ocr_m.replace('<..>', '')
+        if key_lab in ['实缴(退)金额', '总金额']:
+            ocr_m = ocr_v.replace('<..>', '')
+            lab_m = lab_v.replace(',', '')
         # ------------ diy area ------------------
         if lab_m == 'None' and ocr_m == 'None':
             mix_val = 'None'

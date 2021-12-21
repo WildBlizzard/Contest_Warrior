@@ -9,6 +9,8 @@ import json
 import copy
 import base64
 import random
+import asyncio
+import aiohttp
 import pandas as pd
 from math import floor
 from requests import post
@@ -31,20 +33,18 @@ file_name_origin = 'my_score'
 
 class OCR:
 
-    def __init__(self, server_url, image, main_scene, sub_scene, vers=None):
+    def __init__(self, server_url, image, main_scene, sub_scene, async_sess=None, vers=None):
         self.server = server_url
         self.img = image
-        self.vers = vers
         self.main_sce = main_scene
         self.sub_sce = sub_scene
+        self.session = async_sess
+        self.vers = vers
         self.sub_predict_url = 'lab/ocr/predict/' + str(self.main_sce)
         self.predict_url = os.path.join(self.server, self.sub_predict_url)
 
     def data_bs64_encode(self):
-        """
-        打开并读取图片，base64加密，ascii解密
-        return: 解密数据
-        """
+        """打开并读取图片，base64加密，ascii解密"""
         # with open(self.img, 'rb') as f:
         #     image_data = base64.b64encode(f.read())
         image_data = base64.b64encode(self.img)
@@ -53,15 +53,19 @@ class OCR:
         return image_data.decode()
 
     def post_request(self):
-        """
-        将图片内容与场景名称整个为统一数据
-        return: 发出请求
-        """
+        """将图片内容与场景名称整个为统一数据"""
         data = {'image': self.data_bs64_encode(), 'scene': self.sub_sce}
         if self.vers == '105':
             return post(self.predict_url, data=data).json()
         data = {'image': self.data_bs64_encode(), 'scene': self.sub_sce, 'parameters': {'vis_flag': False}}
         return post(self.predict_url, json=data).json()
+
+    async def aiohttp_post(self):
+        """协程化，异步IO"""
+        data = {'image': self.data_bs64_encode(),
+                'scene': self.sub_sce, 'parameters': {'vis_flag': False}}
+        async with self.session.post(self.predict_url, json=data) as resp:
+            return await resp.json()
 
 class RightHand:
 
@@ -291,16 +295,18 @@ class Collector:
         vall_list = [values['value'] for values in label_res]
         return self.split_monks(catt_list, vall_list)
 
-    def get_ocr_res(self): # OCR about
-        engine_ocr = OCR(self.server_o, self.img_o, self.main_o, self.sub_o)
-        try:
-            origin_ocr_result = engine_ocr.post_request()
-        except TimeoutError: print('Connection aborted, no response.')
-        else: return origin_ocr_result
+    async def get_ocr_res(self): # OCR about
+        async with aiohttp.ClientSession() as sess:
+            engine_ocr = OCR(self.server_o, self.img_o, self.main_o, self.sub_o, sess)
+            try:
+                # origin_ocr_result = engine_ocr.post_request()
+                origin_ocr_result = await engine_ocr.aiohttp_post()
+            except TimeoutError: print('Connection aborted, no response.')
+            else: return origin_ocr_result
 
-    def select_ocr_res(self): # OCR about Final
+    async def select_ocr_res(self): # OCR about Final
         try:
-            ocr_res = self.get_ocr_res()
+            ocr_res = await self.get_ocr_res()
         except JSONDecodeError: print('Expecting value wrong, maybe a mistake.')
         else:
             ocr_res_list = ocr_res['data']['result'][0]['data']
@@ -341,8 +347,8 @@ class Collector:
             the_apple[klab] = mix_val
         return the_apple, keys_ocr
 
-    def processing_room(self):
-        ocrs_got = self.select_ocr_res()
+    async def processing_room(self):
+        ocrs_got = await self.select_ocr_res()
         labs_got = self.select_label_res()
         lab_gather = [k_l for k_l in labs_got.keys()]
         for k_o in ocrs_got.keys(): # Focus, full labels empty plz
@@ -443,7 +449,23 @@ class Diy(Collector):
             ocr_m = RightHand.out('[^\u4e00-\u9fa5\s]+', ocr_v)
         if key_lab == '完税编号':
             lab_m = lab_v.replace('.', '')
+            lab_m = lab_v.replace('.', '')
+            ocr_m = ocr_v.replace('税收完税证明', '')
+        if key_lab == '填票人':
+            lab_m = lab_v.replace('.', '')
             ocr_m = ocr_v.replace('.', '')
+        if key_lab == '总金额':
+            lab_m = lab_v.replace(lab_v[0], '￥')
+            ocr_m = ocr_v.replace(ocr_v[0], '￥')
+        if key_lab in ['税种', '税款所属时期', '实缴(退)金额']:
+            ocr_m = ocr_v.replace('<..>', '')
+            if key_lab == '税款所属时期':
+                lab_m = RightHand.out('[^\u4e00-\u9fa5\s]+', lab_v)
+                ocr_m = RightHand.out('[^\u4e00-\u9fa5\s]+', ocr_v)
+                ocr_m = ocr_m.replace('<..>', '')
+        if key_lab in ['实缴(退)金额', '总金额']:
+            ocr_m = ocr_v.replace('<..>', '')
+            lab_m = lab_v.replace(',', '')
         # ------------ diy area ------------------
         if lab_m == 'None' and ocr_m == 'None':
             mix_val = 'None'
@@ -473,14 +495,14 @@ class Peons:
         m = Maker(the_basket_up, self.excel_name)
         m.make_excel()
 
-    def work_man_one(self, basket, lab_cont, ida_cont, img_name): # diy here
+    async def work_man_one(self, basket, lab_cont, ida_cont, img_name): # diy here
         # ------------ diy area ------------------
         # c = Collector(lab_cont, ida_cont, self.sub_sce,
         #             self.main_sce, self.service_eng, img_name)
         # res = c.processing_room()
         d = Diy(lab_cont, ida_cont, self.sub_sce,
                     self.main_sce, self.service_eng, img_name)
-        res = d.processing_room()
+        res = await d.processing_room()
         # ------------ diy area ------------------
         try: apple_c, key_c = res[0], res[1]
         except TypeError:
@@ -494,6 +516,8 @@ class Peons:
         if img_ok and lab_ok: return 1
 
     def work_leader(self):
+        lp = asyncio.get_event_loop()
+        tasks = []
         the_basket = {'apples': [], 'keys': None}
         for img_path in RightHand.through_full_path(self.images):
             img_name = os.path.split(img_path)[-1]
@@ -503,8 +527,9 @@ class Peons:
                 with open(label_path, 'r', encoding='utf8') as lda:
                     lab_cont = lda.read()
                 with open(img_path, 'rb') as ida: ida_cont = ida.read()
-                self.work_man_one(the_basket, lab_cont, ida_cont, img_name)
+                tasks.append(self.work_man_one(the_basket, lab_cont, ida_cont, img_name))
             else: return 'Nothing'
+        lp.run_until_complete(asyncio.gather(*tasks))
         self.work_man_two(the_basket)
 
     def work_work(self):

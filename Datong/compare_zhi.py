@@ -4,6 +4,7 @@ import os
 import sys
 import copy
 import json
+import aiohttp
 import pandas as pd
 from typing import Counter
 sys.dont_write_bytecode = True
@@ -81,16 +82,18 @@ class Collector:
         vall_list = [values['value'] for values in label_res]
         return self.split_monks(catt_list, vall_list)
 
-    def get_ocr_res(self): # OCR about
-        engine_ocr = OCR(self.server_o, self.img_o, self.main_o, self.sub_o)
-        try:
-            origin_ocr_result = engine_ocr.post_request()
-        except TimeoutError: print('Connection aborted, no response.')
-        else: return origin_ocr_result
+    async def get_ocr_res(self): # OCR about
+        async with aiohttp.ClientSession() as sess:
+            engine_ocr = OCR(self.server_o, self.img_o, self.main_o, self.sub_o, sess)
+            try:
+                # origin_ocr_result = engine_ocr.post_request()
+                origin_ocr_result = await engine_ocr.aiohttp_post()
+            except TimeoutError: print('Connection aborted, no response.')
+            else: return origin_ocr_result
 
-    def select_ocr_res(self): # OCR about Final
+    async def select_ocr_res(self): # OCR about Final
         try:
-            ocr_res = self.get_ocr_res()
+            ocr_res = await self.get_ocr_res()
         except JSONDecodeError: print('Expecting value wrong, maybe a mistake.')
         else:
             ocr_res_list = ocr_res['data']['result'][0]['data']
@@ -131,8 +134,8 @@ class Collector:
             the_apple[klab] = mix_val
         return the_apple, keys_ocr
 
-    def processing_room(self):
-        ocrs_got = self.select_ocr_res()
+    async def processing_room(self):
+        ocrs_got = await self.select_ocr_res()
         labs_got = self.select_label_res()
         lab_gather = [k_l for k_l in labs_got.keys()]
         for k_o in ocrs_got.keys(): # Focus, full labels empty plz

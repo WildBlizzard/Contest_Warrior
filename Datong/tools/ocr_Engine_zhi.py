@@ -10,20 +10,18 @@ sys.dont_write_bytecode = True
 
 class OCR:
 
-    def __init__(self, server_url, image, main_scene, sub_scene, vers=None):
+    def __init__(self, server_url, image, main_scene, sub_scene, async_sess=None, vers=None):
         self.server = server_url
         self.img = image
-        self.vers = vers
         self.main_sce = main_scene
         self.sub_sce = sub_scene
+        self.session = async_sess
+        self.vers = vers
         self.sub_predict_url = 'lab/ocr/predict/' + str(self.main_sce)
         self.predict_url = os.path.join(self.server, self.sub_predict_url)
 
     def data_bs64_encode(self):
-        """
-        打开并读取图片，base64加密，ascii解密
-        return: 解密数据
-        """
+        """打开并读取图片，base64加密，ascii解密"""
         # with open(self.img, 'rb') as f:
         #     image_data = base64.b64encode(f.read())
         image_data = base64.b64encode(self.img)
@@ -32,12 +30,17 @@ class OCR:
         return image_data.decode()
 
     def post_request(self):
-        """
-        将图片内容与场景名称整个为统一数据
-        return: 发出请求
-        """
+        """将图片内容与场景名称整个为统一数据"""
         data = {'image': self.data_bs64_encode(), 'scene': self.sub_sce}
         if self.vers == '105':
             return post(self.predict_url, data=data).json()
         data = {'image': self.data_bs64_encode(), 'scene': self.sub_sce, 'parameters': {'vis_flag': False}}
         return post(self.predict_url, json=data).json()
+
+    async def aiohttp_post(self):
+        """协程化，异步IO"""
+        data = {'image': self.data_bs64_encode(),
+                'scene': self.sub_sce, 'parameters': {'vis_flag': False}}
+        async with self.session.post(self.predict_url, json=data) as resp:
+            return await resp.json()
+

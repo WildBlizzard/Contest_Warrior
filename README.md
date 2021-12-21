@@ -1,6 +1,6 @@
 # Contest_Warrior
 
-Version：1.1
+Version：1.2
 
 Python：3.8.5
 
@@ -10,9 +10,11 @@ openpyxl：3.0.7
 
 requests：2.24.0
 
+aiohttp：3.8.1 （3.6.2+）
 
 
-AutoOCR 的 infer 结果（end2end_score）实在太差了，可视性极差，功能鸡肋，特写个方便法帮自己更好地对比标注与识别结果，希望也有机会帮助新人好且便捷地完成工作。
+
+对比 AutoOCR 标注与服务端返回信息值的正确率与细节，在易用性与可视化方面完全领先 AutoOCR 产品内部 inference，v1.2 采用了异步IO，使得效率较之前大幅提高（速度是 v1.1 的 2 倍）。
 
 
 
@@ -24,7 +26,7 @@ AutoOCR 的 infer 结果（end2end_score）实在太差了，可视性极差，�
 
 ### 使用方法：
 
-直接使用一键版：**ContestWarrior_OneStep_v1.1_zhi.py**，修改其头部如下信息，然后python它。
+直接使用一键版：**ContestWarrior_OneStep_Async_v1.2_zhi.py**，修改其头部如下信息，然后python它。
 
 ```python
 # -------------------------------------------------
