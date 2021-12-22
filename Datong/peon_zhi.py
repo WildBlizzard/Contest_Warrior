@@ -33,14 +33,14 @@ class Peons:
         m = Maker(the_basket_up, self.excel_name)
         m.make_excel()
 
-    async def work_man_one(self, basket, lab_cont, ida_cont, img_name): # diy here
+    async def work_man_one(self, basket, lab_cont, ida_cont, img_name, session): # diy here
         # ------------ diy area ------------------
         # c = Collector(lab_cont, ida_cont, self.sub_sce,
         #             self.main_sce, self.service_eng, img_name)
-        # res = c.processing_room()
+        # res = await c.processing_room(session)
         d = Diy(lab_cont, ida_cont, self.sub_sce,
                     self.main_sce, self.service_eng, img_name)
-        res = await d.processing_room()
+        res = await d.processing_room(session)
         # ------------ diy area ------------------
         try: apple_c, key_c = res[0], res[1]
         except TypeError:
@@ -53,28 +53,25 @@ class Peons:
         lab_ok = os.path.exists(label_path)
         if img_ok and lab_ok: return 1
 
-    def work_leader(self):
-        lp = asyncio.get_event_loop()
-        tasks = []
-        the_basket = {'apples': [], 'keys': None}
-        for img_path in RightHand.through_full_path(self.images):
-            img_name = os.path.split(img_path)[-1]
-            lab_name = img_name.split('.')[0] + '.json'
-            label_path = os.path.join(self.labels, lab_name)
-            if self.is_ok(img_path, label_path):
-                with open(label_path, 'r', encoding='utf8') as lda:
-                    lab_cont = lda.read()
-                with open(img_path, 'rb') as ida: ida_cont = ida.read()
-                tasks.append(self.work_man_one(the_basket, lab_cont, ida_cont, img_name))
-            else: return 'Nothing'
-        lp.run_until_complete(asyncio.gather(*tasks))
-        self.work_man_two(the_basket)
+    async def work_leader(self):
+        async with aiohttp.ClientSession() as session:
+            tasks, the_basket = [], {'apples': [], 'keys': None}
+            for img_path in RightHand.through_full_path(self.images):
+                img_name = os.path.split(img_path)[-1]
+                lab_name = img_name.split('.')[0] + '.json'
+                label_path = os.path.join(self.labels, lab_name)
+                if self.is_ok(img_path, label_path):
+                    with open(label_path, 'r', encoding='utf8') as lda: lab_cont = lda.read()
+                    with open(img_path, 'rb') as ida: ida_cont = ida.read()
+                    tasks.append(self.work_man_one(the_basket, lab_cont, ida_cont, img_name, session))
+                else: return 'Nothing'
+            await asyncio.wait(tasks)
+            self.work_man_two(the_basket)
 
     def work_work(self):
         print('----------------- Start the process -----------------\n')
         start = time.perf_counter()
-        try:
-            some_thing = self.work_leader()
+        try: some_thing = asyncio.run(self.work_leader())
         except aiohttp.ClientConnectionError: print('Aiohttp Connection aborted...')
         else:
             if some_thing == 'Nothing':

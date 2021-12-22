@@ -4,6 +4,7 @@
 import os
 import sys
 import json
+import asyncio
 sys.dont_write_bytecode = True
 from Datong.peon_zhi import Peons
 
@@ -21,3 +22,4 @@ file_name = configs['Excel_Name']
 
 p = Peons(labels, images, sub_sce, main_sce, service_eng, file_name)
 p.work_work()
+

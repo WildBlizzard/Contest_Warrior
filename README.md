@@ -4,17 +4,17 @@ Version：1.2
 
 Python：3.8.5
 
-pandas：1.3.1
+Pandas：1.3.1
 
-openpyxl：3.0.7
+Openpyxl：3.0.7
 
-requests：2.24.0
+Requests：2.24.0
 
-aiohttp：3.8.1 （3.6.2+）
+Aiohttp：3.8.1 （3.6.2+）
 
 
 
-对比 AutoOCR 标注与服务端返回信息值的正确率与细节，在易用性与可视化方面完全领先 AutoOCR 产品内部 inference，v1.2 采用了异步IO，使得效率较之前大幅提高（速度是 v1.1 的 2 倍）。
+对比 AutoOCR 标注与服务端返回信息值的正确率与细节，在易用性与可视化方面完全领先 AutoOCR 产品内部 inference，v1.2 采用了异步IO，使得效率较之前大幅提高（速度是 v1.1 的 2 ~ 3 倍）。
 
 
 
@@ -79,14 +79,14 @@ python slaveholder_zhi.py
 其中 **peon_zhi.py** 的 **work_man_one** 方法是替换类的工作位置。
 
 ```python
-def work_man_one(self, basket, lab_cont, ida_cont, img_name): # diy here
+async def work_man_one(self, basket, lab_cont, ida_cont, img_name, session): # diy here
         # ------------ diy area ------------------
         # c = Collector(lab_cont, ida_cont, self.sub_sce,
         #             self.main_sce, self.service_eng, img_name)
-        # res = c.processing_room()
+        # res = await c.processing_room(session)
         d = Diy(lab_cont, ida_cont, self.sub_sce,
                     self.main_sce, self.service_eng, img_name)
-        res = d.processing_room()
+        res = await d.processing_room(session)
         # ------------ diy area ------------------
         try: apple_c, key_c = res[0], res[1]
         except TypeError:

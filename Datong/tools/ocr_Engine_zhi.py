@@ -4,6 +4,7 @@
 import os
 import sys
 import base64
+import aiohttp
 from requests import post
 sys.dont_write_bytecode = True
 
@@ -41,6 +42,8 @@ class OCR:
         """协程化，异步IO"""
         data = {'image': self.data_bs64_encode(),
                 'scene': self.sub_sce, 'parameters': {'vis_flag': False}}
-        async with self.session.post(self.predict_url, json=data) as resp:
-            return await resp.json()
+        try:
+            async with self.session.post(self.predict_url, json=data, timeout=1200) as resp:
+                return await resp.json()
+        except Exception: print('aiohttp_post_timeout!')
 

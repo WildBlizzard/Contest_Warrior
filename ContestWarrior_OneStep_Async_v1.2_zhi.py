@@ -64,8 +64,10 @@ class OCR:
         """协程化，异步IO"""
         data = {'image': self.data_bs64_encode(),
                 'scene': self.sub_sce, 'parameters': {'vis_flag': False}}
-        async with self.session.post(self.predict_url, json=data) as resp:
-            return await resp.json()
+        try:
+            async with self.session.post(self.predict_url, json=data, timeout=1200) as resp:
+                return await resp.json()
+        except Exception: print('aiohttp_post_timeout!')
 
 class RightHand:
 
@@ -295,18 +297,17 @@ class Collector:
         vall_list = [values['value'] for values in label_res]
         return self.split_monks(catt_list, vall_list)
 
-    async def get_ocr_res(self): # OCR about
-        async with aiohttp.ClientSession() as sess:
-            engine_ocr = OCR(self.server_o, self.img_o, self.main_o, self.sub_o, sess)
-            try:
-                # origin_ocr_result = engine_ocr.post_request()
-                origin_ocr_result = await engine_ocr.aiohttp_post()
-            except TimeoutError: print('Connection aborted, no response.')
-            else: return origin_ocr_result
-
-    async def select_ocr_res(self): # OCR about Final
+    async def get_ocr_res(self, session_3up): # OCR about
+        engine_ocr = OCR(self.server_o, self.img_o, self.main_o, self.sub_o, session_3up)
         try:
-            ocr_res = await self.get_ocr_res()
+            # origin_ocr_result = engine_ocr.post_request()
+            origin_ocr_result = await engine_ocr.aiohttp_post()
+        except TimeoutError: print('Connection aborted, no response.')
+        else: return origin_ocr_result
+
+    async def select_ocr_res(self, session_upup): # OCR about Final
+        try:
+            ocr_res = await self.get_ocr_res(session_upup)
         except JSONDecodeError: print('Expecting value wrong, maybe a mistake.')
         else:
             ocr_res_list = ocr_res['data']['result'][0]['data']
@@ -347,16 +348,17 @@ class Collector:
             the_apple[klab] = mix_val
         return the_apple, keys_ocr
 
-    async def processing_room(self):
-        ocrs_got = await self.select_ocr_res()
-        labs_got = self.select_label_res()
-        lab_gather = [k_l for k_l in labs_got.keys()]
-        for k_o in ocrs_got.keys(): # Focus, full labels empty plz
-            if k_o not in lab_gather: labs_got[k_o] = 'None'
-        # set Excel header
-        keys_ocr_set = [key_ocr for key_ocr in ocrs_got.keys()]
-        keys_ocr_set.insert(0, '文件名/准确率')
-        return self.deal_final_info(labs_got, ocrs_got, keys_ocr_set)
+    async def processing_room(self, session_up):
+        try: ocrs_got = await self.select_ocr_res(session_up)
+        except TypeError: print('ocr return noting...')
+        else:
+            labs_got = self.select_label_res()
+            lab_gather = [k_l for k_l in labs_got.keys()]
+            for k_o in ocrs_got.keys(): # Focus, full labels empty plz
+                if k_o not in lab_gather: labs_got[k_o] = 'None'
+            keys_ocr_set = [key_ocr for key_ocr in ocrs_got.keys()] # set Excel header
+            keys_ocr_set.insert(0, '文件名/准确率')
+            return self.deal_final_info(labs_got, ocrs_got, keys_ocr_set)
 
 class Maker:
 
@@ -495,14 +497,14 @@ class Peons:
         m = Maker(the_basket_up, self.excel_name)
         m.make_excel()
 
-    async def work_man_one(self, basket, lab_cont, ida_cont, img_name): # diy here
+    async def work_man_one(self, basket, lab_cont, ida_cont, img_name, session): # diy here
         # ------------ diy area ------------------
         # c = Collector(lab_cont, ida_cont, self.sub_sce,
         #             self.main_sce, self.service_eng, img_name)
-        # res = c.processing_room()
+        # res = await c.processing_room(session)
         d = Diy(lab_cont, ida_cont, self.sub_sce,
                     self.main_sce, self.service_eng, img_name)
-        res = await d.processing_room()
+        res = await d.processing_room(session)
         # ------------ diy area ------------------
         try: apple_c, key_c = res[0], res[1]
         except TypeError:
@@ -515,28 +517,25 @@ class Peons:
         lab_ok = os.path.exists(label_path)
         if img_ok and lab_ok: return 1
 
-    def work_leader(self):
-        lp = asyncio.get_event_loop()
-        tasks = []
-        the_basket = {'apples': [], 'keys': None}
-        for img_path in RightHand.through_full_path(self.images):
-            img_name = os.path.split(img_path)[-1]
-            lab_name = img_name.split('.')[0] + '.json'
-            label_path = os.path.join(self.labels, lab_name)
-            if self.is_ok(img_path, label_path):
-                with open(label_path, 'r', encoding='utf8') as lda:
-                    lab_cont = lda.read()
-                with open(img_path, 'rb') as ida: ida_cont = ida.read()
-                tasks.append(self.work_man_one(the_basket, lab_cont, ida_cont, img_name))
-            else: return 'Nothing'
-        lp.run_until_complete(asyncio.gather(*tasks))
-        self.work_man_two(the_basket)
+    async def work_leader(self):
+        async with aiohttp.ClientSession() as session:
+            tasks, the_basket = [], {'apples': [], 'keys': None}
+            for img_path in RightHand.through_full_path(self.images):
+                img_name = os.path.split(img_path)[-1]
+                lab_name = img_name.split('.')[0] + '.json'
+                label_path = os.path.join(self.labels, lab_name)
+                if self.is_ok(img_path, label_path):
+                    with open(label_path, 'r', encoding='utf8') as lda: lab_cont = lda.read()
+                    with open(img_path, 'rb') as ida: ida_cont = ida.read()
+                    tasks.append(self.work_man_one(the_basket, lab_cont, ida_cont, img_name, session))
+                else: return 'Nothing'
+            await asyncio.wait(tasks)
+            self.work_man_two(the_basket)
 
     def work_work(self):
         print('----------------- Start the process -----------------\n')
         start = time.perf_counter()
-        try:
-            some_thing = self.work_leader()
+        try: some_thing = asyncio.run(self.work_leader())
         except aiohttp.ClientConnectionError: print('Aiohttp Connection aborted...')
         else:
             if some_thing == 'Nothing':
