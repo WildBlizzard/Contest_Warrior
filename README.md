@@ -14,7 +14,7 @@ Aiohttp：3.8.1 （3.6.2+）
 
 
 
-对比 AutoOCR 标注与服务端返回信息值的正确率与细节，在易用性与可视化方面完全领先 AutoOCR 产品内部 inference，v1.2 采用了异步IO，使得效率较之前大幅提高（速度是 v1.1 的 2倍+）。
+对比 AutoOCR 标注与服务端返回信息值的正确率与细节，在易用性与可视化方面完全领先 AutoOCR 产品内部 inference，v1.2 采用了异步IO，使得效率较之前大幅提高（速度是 v1.1 的 2倍+），但受限于不同平台性能有别，故使用时应注意 session 限制，Windows 下 3 较为合适。
 
 
 
@@ -37,6 +37,7 @@ sub_sce_origin = 'xxxx' # 场景 Scene
 main_sce_origin = 'xxxx'  # Scene 上级，如 ticket
 service_eng_origin = 'http://127.0.0.1:8888/' # 请求URL，注意最后一定要有 "/"
 file_name_origin = 'my_score' # 最后输出的Excel名，默认输出到当前路径下 Excels
+limit_client_session = 3 # 0 是不限制; Windows 下建议 <= 6; Linx 下可根据性能适当提高, 实测 NVIDIA A10 可开至 300
 # -------------------------------------------------
 ```
 
@@ -50,7 +51,8 @@ file_name_origin = 'my_score' # 最后输出的Excel名，默认输出到当前�
   "Scene": "xxxx", # 场景 Scene
   "Scene_Main": "xxxx", # Scene 上级，如 ticket
   "Host&Port": "http://127.0.0.1:2021/", # 请求URL，注意最后一定要有 "/"
-  "Excel_Name": "my_score" # 最后输出的Excel名，默认输出到当前路径下 Excels
+  "Excel_Name": "my_score", # 最后输出的Excel名，默认输出到当前路径下 Excels
+  "Limit_Num": 6 # 0 是不限制; Windows 下建议 <= 6; Linx 下可根据性能适当提高, 实测 NVIDIA A10 可开至 300
 }
 ```
 

@@ -1,7 +1,8 @@
 {
   "Data": "data",
-  "Scene": "xxxx",
-  "Scene_Main": "xxxx",
-  "Host&Port": "http://127.0.0.1:8888/",
-  "Excel_Name": "my_score"
+  "Scene": "payment_online",
+  "Scene_Main": "ticket",
+  "Host&Port": "http://117.161.12.146:7506/",
+  "Excel_Name": "my_score",
+  "Limit_Num": 6
 }

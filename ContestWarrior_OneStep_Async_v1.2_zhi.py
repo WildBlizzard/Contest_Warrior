@@ -26,8 +26,9 @@ labels_origin = os.path.join(data_origin, 'Labels')
 images_origin = os.path.join(data_origin, 'Images')
 sub_sce_origin = 'xxxx'
 main_sce_origin = 'xxxx'
-service_eng_origin = 'http://127.0.0.1:8888/'
+service_eng_origin = 'hhttp://127.0.0.1:8888/'
 file_name_origin = 'my_score'
+limit_client_session = 3 # 0 是不限制; Windows 下建议 <= 6; Linx 下可根据性能适当提高, 实测 NVIDIA A10 可开至 300
 # -------------------------------------------------
 
 
@@ -64,10 +65,8 @@ class OCR:
         """协程化，异步IO"""
         data = {'image': self.data_bs64_encode(),
                 'scene': self.sub_sce, 'parameters': {'vis_flag': False}}
-        try:
-            async with self.session.post(self.predict_url, json=data, timeout=1200) as resp:
-                return await resp.json()
-        except Exception: print('aiohttp_post_timeout!')
+        async with self.session.post(self.predict_url, json=data, timeout=1200) as resp:
+            return await resp.json()
 
 class RightHand:
 
@@ -479,13 +478,15 @@ class Diy(Collector):
 
 class Peons:
 
-    def __init__(self, labels, images, sub_sce, main_sce, service_eng, excel_name) -> None:
+    def __init__(self, labels, images, sub_sce, main_sce, service_eng, excel_name, lt_cs=3, to_cs=600) -> None:
         self.labels = labels
         self.images = images
         self.sub_sce = sub_sce
         self.main_sce = main_sce
         self.service_eng = service_eng
         self.excel_name = excel_name
+        self.limit_num = lt_cs
+        self.timeout_num = to_cs
 
     def work_man_two(self, the_basket_up):
         if the_basket_up['keys'] == 'None':
@@ -518,7 +519,9 @@ class Peons:
         if img_ok and lab_ok: return 1
 
     async def work_leader(self):
-        async with aiohttp.ClientSession() as session:
+        limit_co = aiohttp.TCPConnector(limit=self.limit_num)
+        timeouter = aiohttp.ClientTimeout(total=self.timeout_num)
+        async with aiohttp.ClientSession(connector=limit_co, timeout=timeouter) as session:
             tasks, the_basket = [], {'apples': [], 'keys': None}
             for img_path in RightHand.through_full_path(self.images):
                 img_name = os.path.split(img_path)[-1]
@@ -529,17 +532,18 @@ class Peons:
                     with open(img_path, 'rb') as ida: ida_cont = ida.read()
                     tasks.append(self.work_man_one(the_basket, lab_cont, ida_cont, img_name, session))
                 else: return 'Nothing'
-            await asyncio.wait(tasks)
+            await asyncio.gather(*tasks)
             self.work_man_two(the_basket)
 
     def work_work(self):
         print('----------------- Start the process -----------------\n')
         start = time.perf_counter()
-        try: some_thing = asyncio.run(self.work_leader())
-        except aiohttp.ClientConnectionError: print('Aiohttp Connection aborted...')
-        else:
-            if some_thing == 'Nothing':
-                print('Input error, stoped the program, please check the data folder.')
+        try:
+            # asyncio.run(self.work_leader())
+            loop = asyncio.get_event_loop()
+            loop.run_until_complete(self.work_leader())
+        except aiohttp.ClientConnectionError :
+            print('Plz lower tne "limit_client_session"...')
         stop = time.perf_counter() - start
         final_show = RightHand.electronic_clock(stop)
         hour, minute, second = final_show[0], final_show[1], final_show[2]
@@ -548,6 +552,6 @@ class Peons:
 
 
 if __name__ == '__main__':
-    peo = Peons(labels_origin, images_origin, sub_sce_origin,
-                main_sce_origin, service_eng_origin, file_name_origin)
+    peo = Peons(labels_origin, images_origin, sub_sce_origin, main_sce_origin,
+                service_eng_origin, file_name_origin, limit_client_session)
     peo.work_work()
