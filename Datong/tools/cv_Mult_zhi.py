@@ -38,7 +38,7 @@ class CvMultMethod:
         return pyz.decode(gray_img)[0].data.decode('utf-8')
 
     @staticmethod
-    def mid_process(upper_list):
+    def crop_process(upper_list):
         """
         crop middle procee
         upper_list: from function "crop_image"
@@ -59,7 +59,7 @@ class CvMultMethod:
         img: image data
         sign_up: index list
         yyxx: y0:y1, x0:x1 possible number
-        return: cropped image
+        return: crop image by cv2
         """
         y0 = int(sign_up[yyxx[0]])
         y1 = int(sign_up[yyxx[1]])
@@ -89,3 +89,28 @@ class CvMultMethod:
             crop_one = CvMultMethod.crop_attendant(ci_data_image, sign, a, b, c, d)
         return crop_one
 
+    @staticmethod
+    def vertical_horizontal(img_list, v_h, interpolation=cv2.INTER_CUBIC):
+        """
+        img_list: [img1, img2, img3...]
+        v_h: v or h (vertical & horizontal)
+        interpolation:
+            INTER_NEAREST 最近邻插值
+            INTER_LINEAR 双线性插值（默认设置）
+            INTER_AREA 使用像素区域关系进行重采样
+            INTER_CUBIC 4x4像素邻域的双三次插值
+            INTER_LANCZOS4 8x8像素邻域的Lanczos插值
+        return: merged image
+        """
+        w_min = min(img0.shape[1] for img0 in img_list) # take minimum width
+        h_min = min(img.shape[0] for img in img_list) # take minimum hights
+        im_list_resize = []
+        for img1 in img_list: # resizing images
+            w_old, h_old = img1.shape[1], img1.shape[0]
+            if v_h == 'v': w_h_new = w_min, int(w_min * h_old / w_old)
+            elif v_h == 'h': w_h_new = int(w_old * h_min / h_old), h_min
+            cvr = cv2.resize(img1, w_h_new, interpolation=interpolation)
+            im_list_resize.append(cvr)
+        if v_h == 'v': final_vh_img = cv2.vconcat(im_list_resize)
+        elif v_h == 'h': final_vh_img = cv2.hconcat(im_list_resize)
+        return final_vh_img # return final image
