@@ -59,7 +59,7 @@ class CvMultMethod:
         img: image data
         sign_up: index list
         yyxx: y0:y1, x0:x1 possible number
-        return: crop image
+        return: cropped image
         """
         y0 = int(sign_up[yyxx[0]])
         y1 = int(sign_up[yyxx[1]])
