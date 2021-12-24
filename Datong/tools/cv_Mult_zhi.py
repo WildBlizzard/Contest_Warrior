@@ -103,7 +103,7 @@ class CvMultMethod:
         return: merged image
         """
         w_min = min(img0.shape[1] for img0 in img_list) # take minimum width
-        h_min = min(img.shape[0] for img in img_list) # take minimum hights
+        h_min = min(img.shape[0] for img in img_list) # take minimum hight
         im_list_resize = []
         for img1 in img_list: # resizing images
             w_old, h_old = img1.shape[1], img1.shape[0]
