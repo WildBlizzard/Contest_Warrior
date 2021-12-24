@@ -53,6 +53,23 @@ class CvMultMethod:
         return upper_list
 
     @staticmethod
+    def crop_attendant(img, sign_up, *yyxx):
+        """
+        output the final crop
+        img: image data
+        sign_up: index list
+        yyxx: y0:y1, x0:x1 possible number
+        return: crop image by cv2
+        """
+        y0 = int(sign_up[yyxx[0]])
+        y1 = int(sign_up[yyxx[1]])
+        x0 = int(sign_up[yyxx[2]])
+        x1 = int(sign_up[yyxx[-1]])
+        mid_list = CvMultMethod.crop_process([y0, y1, x0, x1]) # switch negative
+        y0, y1, x0, x1 = mid_list[0], mid_list[1], mid_list[2], mid_list[-1]
+        return img[y0:y1, x0:x1]
+
+    @staticmethod
     def crop_image(ci_data_image, list_bboxes):
         """
         Get a crop image
@@ -64,10 +81,11 @@ class CvMultMethod:
         shapes = np.array(list_bboxes).shape
         # sign = sum(list_bboxes, [])
         sign = sum(list_bboxes, []) if len(shapes) != 1 else list_bboxes
-        # get a normal list
-        y0, y1, x0, x1 = int(sign[1]), int(sign[-1]), int(sign[-2]), int(sign[2])
-        # switch negative
-        final_li = CvMultMethod.mid_process([y0, y1, x0, x1])
-        y0, y1, x0, x1 = final_li[0], final_li[1], final_li[2], final_li[-1]
-        return ci_data_image[y0:y1, x0:x1]
+        crop_one = np.array([])
+        possible = [(1, -1, -2, 2), (3, -1, 0, -2), (-1, 1, 2, -2), (-1, 3, -2, 0)]
+        for pos in possible:
+            if crop_one.size: break
+            a, b, c, d = pos[0], pos[1], pos[2], pos[-1]
+            crop_one = CvMultMethod.crop_attendant(ci_data_image, sign, a, b, c, d)
+        return crop_one
 
