@@ -509,9 +509,11 @@ class Peons:
         # ------------ diy area ------------------
         try: apple_c, key_c = res[0], res[1]
         except TypeError:
-            apple_c, key_c = {'None': 'None'}, 'None'
-        basket['apples'].append(apple_c)
-        basket['keys'] = key_c
+            # apple_c, key_c = {'None': 'None'}, 'None'
+            pass
+        else:
+            basket['apples'].append(apple_c)
+            basket['keys'] = key_c
 
     def is_ok(self, img_path, label_path):
         img_ok = os.path.exists(img_path)
