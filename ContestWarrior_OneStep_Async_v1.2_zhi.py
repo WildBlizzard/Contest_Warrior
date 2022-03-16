@@ -26,7 +26,7 @@ labels_origin = os.path.join(data_origin, 'Labels')
 images_origin = os.path.join(data_origin, 'Images')
 sub_sce_origin = 'xxxx'
 main_sce_origin = 'xxxx'
-service_eng_origin = 'hhttp://127.0.0.1:8888/'
+service_eng_origin = 'http://127.0.0.1:8888/'
 file_name_origin = 'my_score'
 limit_client_session = 3 # 0 是不限制; Windows 下建议 <= 6; Linx 下可根据性能适当提高, 实测 NVIDIA A10 可开至 300
 # -------------------------------------------------
