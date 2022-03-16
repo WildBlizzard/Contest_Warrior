@@ -485,8 +485,8 @@ class Peons:
         self.main_sce = main_sce
         self.service_eng = service_eng
         self.excel_name = excel_name
-        self.limit_num = lt_cs
-        self.timeout_num = to_cs
+        self.lico = aiohttp.TCPConnector(limit=lt_cs)
+        self.tter = aiohttp.ClientTimeout(total=to_cs)
 
     def work_man_two(self, the_basket_up):
         if the_basket_up['keys'] == 'None':
@@ -509,32 +509,41 @@ class Peons:
         # ------------ diy area ------------------
         try: apple_c, key_c = res[0], res[1]
         except TypeError:
-            # apple_c, key_c = {'None': 'None'}, 'None'
-            pass
-        else:
-            basket['apples'].append(apple_c)
-            basket['keys'] = key_c
+            apple_c, key_c = {'None': 'None'}, 'None'
+        basket['apples'].append(apple_c)
+        basket['keys'] = key_c
 
-    def is_ok(self, img_path, label_path):
+    def deal_empty(self, the_basket_up, empty_list):
+        apples_b, banana_h = the_basket_up['apples'], OrderedDict()
+        for empty_f in empty_list: # 获取空标注的图片
+            name_empty = os.path.split(empty_f)[-1] # image name
+            banana_h['文件名/准确率'] = name_empty
+            for k_apple in apples_b[0].keys():
+                if k_apple == '文件名/准确率': continue
+                banana_h[k_apple] = 'None'
+            apples_b.append(banana_h)
+
+    def is_ok(self, img_path, label_path, epts_up):
         img_ok = os.path.exists(img_path)
         lab_ok = os.path.exists(label_path)
-        if img_ok and lab_ok: return 1
+        with open(label_path, encoding='utf8') as lab_file:
+            lab_inside = json.load(lab_file)
+        if not lab_inside: epts_up.append(img_path)
+        if img_ok and lab_ok and lab_inside: return 1
 
     async def work_leader(self):
-        limit_co = aiohttp.TCPConnector(limit=self.limit_num)
-        timeouter = aiohttp.ClientTimeout(total=self.timeout_num)
-        async with aiohttp.ClientSession(connector=limit_co, timeout=timeouter) as session:
-            tasks, the_basket = [], {'apples': [], 'keys': None}
+        async with aiohttp.ClientSession(connector=self.lico, timeout=self.tter) as session:
+            tasks, epts, the_basket = [], [], {'apples': [], 'keys': None}
             for img_path in RightHand.through_full_path(self.images):
                 img_name = os.path.split(img_path)[-1]
                 lab_name = img_name.split('.')[0] + '.json'
                 label_path = os.path.join(self.labels, lab_name)
-                if self.is_ok(img_path, label_path):
+                if self.is_ok(img_path, label_path, epts):
                     with open(label_path, 'r', encoding='utf8') as lda: lab_cont = lda.read()
                     with open(img_path, 'rb') as ida: ida_cont = ida.read()
                     tasks.append(self.work_man_one(the_basket, lab_cont, ida_cont, img_name, session))
-                else: return 'Nothing'
             await asyncio.gather(*tasks)
+            if epts: self.deal_empty(the_basket, epts) # 处理空标注数据
             self.work_man_two(the_basket)
 
     def work_work(self):
@@ -545,7 +554,7 @@ class Peons:
             loop = asyncio.get_event_loop()
             loop.run_until_complete(self.work_leader())
         except aiohttp.ClientConnectionError :
-            print('Plz lower tne "limit_client_session"...')
+            print('Network Error or lower tne "limit_client_session"')
         stop = time.perf_counter() - start
         final_show = RightHand.electronic_clock(stop)
         hour, minute, second = final_show[0], final_show[1], final_show[2]
