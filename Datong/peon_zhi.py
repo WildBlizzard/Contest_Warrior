@@ -53,8 +53,9 @@ class Peons:
         basket['keys'] = key_c
 
     def deal_empty(self, the_basket_up, empty_list):
-        apples_b, banana_h = the_basket_up['apples'], OrderedDict()
+        apples_b = the_basket_up['apples']
         for empty_f in empty_list: # 获取空标注的图片
+            banana_h = OrderedDict()
             name_empty = os.path.split(empty_f)[-1] # image name
             banana_h['文件名/准确率'] = name_empty
             for k_apple in apples_b[0].keys():
