@@ -4,6 +4,7 @@
 import os
 import sys
 import json
+import time
 sys.dont_write_bytecode = True
 from Datong.peon_zhi import Peons
 
@@ -55,3 +56,5 @@ else:
 p = Peons(labels, images, sub_sce, main_sce, service_eng, file_name, limit_client_session)
 p.work_work()
 
+print('5秒后关闭本程序......')
+time.sleep(5)
