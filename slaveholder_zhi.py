@@ -52,7 +52,7 @@ else:
     while not service_eng: service_eng = input('必须输入OCR服务地址(如“http://188.88.88.88:8506/”): ')
     print()
 
-
+if service_eng[-1] != '/': service_eng += '/'
 p = Peons(labels, images, sub_sce, main_sce, service_eng, file_name, limit_client_session)
 p.work_work()
 
