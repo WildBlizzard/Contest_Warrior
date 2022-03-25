@@ -20,10 +20,13 @@ print('-------------------------------------------------------\n')
 
 current_dir_path = os.getcwd()
 is_config = os.path.exists(os.path.join(current_dir_path, 'holder_zhi.json'))
-chose_config = input('检测到配置文件存在，是否跳过手动输入？(回车默认跳过，输入任意字符开始手动输入): ')
-print()
+a_b = 0
+if is_config:
+    chose_config = input('检测到配置文件存在，是否跳过手动输入？(回车默认跳过，输入任意字符开始手动输入): ')
+    a_b = chose_config
+    print()
 
-if is_config and not chose_config:
+if not a_b:
     holder = 'holder_zhi.json'
     with open(holder, 'r', encoding='utf8') as cs: configs = json.load(cs)
 
@@ -33,7 +36,7 @@ if is_config and not chose_config:
     main_sce = configs['Scene_Main']
     service_eng = configs['Host&Port']
     file_name = configs['Excel_Name']
-    limit_client_session = configs['Limit_Num'] # 0 是不限制, Windows 下建议 <= 6, Linx 下可根据性能适当提高, 实测 NVIDIA A10 可开至 300
+    limit_client_session = configs['Limit_Num']
 else:
     default_data = os.path.join(current_dir_path, 'data')
     default_labs, default_imgs = os.path.join(default_data, 'Labels'), os.path.join(default_data, 'Images')
