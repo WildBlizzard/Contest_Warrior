@@ -429,7 +429,12 @@ class Maker:
         excel_name = self.diy_name + '.xlsx'
         excel_path = os.path.join('Excels', excel_name)
         RightHand.make_dirs(os.path.split(excel_path)[0])
+<<<<<<< HEAD
         try: df.to_excel(excel_path, index=False)
+=======
+        # try: df.to_excel(excel_path)
+        try: df.to_excel(excel_path, index=False) # remove first index
+>>>>>>> 41acefa5028233c0c02e518d8fd7e14c65215f20
         except PermissionError:
             print('Plz shutdown the excel and try again...')
         else: print('Work completed!')
@@ -452,21 +457,6 @@ class Diy(Collector):
             lab_m = lab_v.replace('.', '')
             lab_m = lab_v.replace('.', '')
             ocr_m = ocr_v.replace('税收完税证明', '')
-        if key_lab == '填票人':
-            lab_m = lab_v.replace('.', '')
-            ocr_m = ocr_v.replace('.', '')
-        if key_lab == '总金额':
-            lab_m = lab_v.replace(lab_v[0], '￥')
-            ocr_m = ocr_v.replace(ocr_v[0], '￥')
-        if key_lab in ['税种', '税款所属时期', '实缴(退)金额']:
-            ocr_m = ocr_v.replace('<..>', '')
-            if key_lab == '税款所属时期':
-                lab_m = RightHand.out('[^\u4e00-\u9fa5\s]+', lab_v)
-                ocr_m = RightHand.out('[^\u4e00-\u9fa5\s]+', ocr_v)
-                ocr_m = ocr_m.replace('<..>', '')
-        if key_lab in ['实缴(退)金额', '总金额']:
-            ocr_m = ocr_v.replace('<..>', '')
-            lab_m = lab_v.replace(',', '')
         # ------------ diy area ------------------
         if lab_m == 'None' and ocr_m == 'None':
             mix_val = 'None'

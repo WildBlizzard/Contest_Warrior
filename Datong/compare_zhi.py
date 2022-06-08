@@ -215,7 +215,12 @@ class Maker:
         excel_name = self.diy_name + '.xlsx'
         excel_path = os.path.join('Excels', excel_name)
         RightHand.make_dirs(os.path.split(excel_path)[0])
+<<<<<<< HEAD
         try: df.to_excel(excel_path, index=False)
+=======
+        # try: df.to_excel(excel_path)
+        try: df.to_excel(excel_path, index=False) # remove first index
+>>>>>>> 41acefa5028233c0c02e518d8fd7e14c65215f20
         except PermissionError:
             print('Plz shutdown the excel and try again...')
         else: print('Work completed!')
