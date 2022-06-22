@@ -1,4 +1,4 @@
-# --- 虽有多闻 若不修行 与不闻等 如人说食 终不能饱
+# --- Namo tassa bhagavato arahato sammāsambuddhassa
 
 
 import sys
