@@ -366,11 +366,11 @@ class Collector:
         except TypeError: print('ocr return noting...')
         else:
             labs_got = self.select_label_res()
-            lab_gather = [k_l for k_l in labs_got.keys()] if not manul_headers else manul_headers
+            lab_gather = [k_l for k_l in labs_got.keys()] if not manul_headers else copy.deepcopy(manul_headers)
             for k_o in ocrs_got.keys(): # Focus, full labels empty plz
                 if k_o not in lab_gather: labs_got[k_o] = 'None'
             # set Excel header
-            keys_ocr_set = [key_ocr for key_ocr in ocrs_got.keys()] if not manul_headers else manul_headers
+            keys_ocr_set = [key_ocr for key_ocr in ocrs_got.keys()] if not manul_headers else copy.deepcopy(manul_headers)
             keys_ocr_set.insert(0, '文件名/准确率')
             return self.deal_final_info(labs_got, ocrs_got, keys_ocr_set, lab_gather)
 
